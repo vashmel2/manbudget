@@ -1,9 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Zap } from "lucide-react";
 import { togglePaid } from "./actions";
 import { peso } from "@/lib/peso";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { BillWithStatus } from "@/lib/queries";
 
 interface Props {
@@ -13,9 +14,15 @@ interface Props {
 
 export function BillRow({ bill, onEdit }: Props) {
   const [pending, startTransition] = useTransition();
+  const [confirming, setConfirming] = useState(false);
 
   function toggle(e: React.MouseEvent) {
     e.stopPropagation();
+    setConfirming(true);
+  }
+
+  function handleConfirm() {
+    setConfirming(false);
     startTransition(async () => {
       await togglePaid(bill.id, bill.cadence);
     });
@@ -57,6 +64,17 @@ export function BillRow({ bill, onEdit }: Props) {
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirming}
+        title={bill.paid ? `Mark ${bill.name} unpaid?` : `Mark ${bill.name} paid?`}
+        message={bill.paid
+          ? `This removes the paid status for this period. You can re-tick it later.`
+          : `This marks ${peso(bill.amountCents)} as paid for ${bill.period}.`}
+        confirmLabel={bill.paid ? "Mark unpaid" : "Mark paid"}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirming(false)}
+      />
     </div>
   );
 }

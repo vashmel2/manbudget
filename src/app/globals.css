@@ -324,7 +324,15 @@ input[type="number"]{ min-width:0; max-width:100%; }
 
 /* ---------- shell ---------- */
 .app-shell{ display:flex; min-height:100dvh; }
-.app-shell main{ flex:1; min-width:0; padding: var(--pad) var(--pad) calc(64px + var(--pad)); max-width: 1280px; margin: 0 auto; width:100%; }
+.app-shell main{
+  flex:1; min-width:0;
+  padding:
+    calc(var(--pad) + env(safe-area-inset-top, 0px))
+    var(--pad)
+    calc(84px + env(safe-area-inset-bottom, 0px))
+    var(--pad);
+  max-width: 1280px; margin: 0 auto; width:100%;
+}
 
 .app-sidebar{ display:none; }
 
