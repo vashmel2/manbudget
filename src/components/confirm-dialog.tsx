@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+
 interface Props {
   open: boolean;
   title: string;
@@ -21,8 +24,12 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: Props) {
-  if (!open) return null;
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!open || !mounted) return null;
+
+  const dialog = (
     <div className="modal-scrim" onClick={onCancel}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="card-pad col" style={{ gap: 14 }}>
@@ -46,4 +53,6 @@ export function ConfirmDialog({
       </div>
     </div>
   );
+
+  return createPortal(dialog, document.body);
 }

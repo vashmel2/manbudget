@@ -36,10 +36,30 @@ export default async function DashboardPage() {
 
       {/* Stats grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "var(--gap)" }}>
-        <Stat label="Income" value={pesoK(m.incomeMTD)} sub={pesoK(m.incomeReceived) + " in so far"} tone="pos" />
-        <Stat label="Bills" value={pesoK(m.billsTotal)} sub={`${m.billsPaidCount}/${m.billsTotalCount} paid`} tone="cyan" />
-        <Stat label="Spent MTD" value={pesoK(m.spentMTD)} sub={m.budgetTotal > 0 ? `${Math.round(m.spentMTD / m.budgetTotal * 100)}% of budget` : "no budget"} tone={onPace ? "neutral" : "warn"} />
-        <Stat label="Projected EOM" value={pesoK(m.projectedEOM)} sub={m.projectedEOM >= 0 ? "surplus est." : "shortfall est."} tone={m.projectedEOM >= 0 ? "pos" : "warn"} />
+        <Stat
+          label="Income this month"
+          value={pesoK(m.incomeMTD)}
+          sub={m.incomeReceived > 0 ? pesoK(m.incomeReceived) + " in the bank" : "nothing received yet"}
+          tone="pos"
+        />
+        <Stat
+          label="Bills this month"
+          value={pesoK(m.billsTotal)}
+          sub={`${pesoK(m.billsPaidTotal)} paid · ${m.billsPaidCount}/${m.billsTotalCount}`}
+          tone="cyan"
+        />
+        <Stat
+          label="Spent so far"
+          value={pesoK(m.spentMTD)}
+          sub={m.budgetTotal > 0 ? `${Math.round(m.spentMTD / m.budgetTotal * 100)}% of total budget` : "no budget set"}
+          tone={onPace ? "neutral" : "warn"}
+        />
+        <Stat
+          label="Month-end forecast"
+          value={pesoK(m.projectedEOM)}
+          sub={m.projectedEOM >= 0 ? "projected leftover" : "projected shortfall"}
+          tone={m.projectedEOM >= 0 ? "pos" : "warn"}
+        />
       </div>
 
       {/* Donut where income goes */}
