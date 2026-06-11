@@ -17,6 +17,8 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   pinHash: text("pin_hash").notNull(),
+  role: text("role").notNull().default("owner"),
+  linkedToUserId: integer("linked_to_user_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -75,6 +77,7 @@ export const transactions = pgTable(
     categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
     note: text("note"),
     occurredAt: date("occurred_at").notNull(),
+    addedByUserId: integer("added_by_user_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [

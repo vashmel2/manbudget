@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireUserId } from "@/lib/require-user";
+import { requireActor, requireOwner } from "@/lib/require-user";
 
 const txSchema = z.object({
   label: z.string().trim().min(1, "Label required").max(80),
@@ -17,7 +17,7 @@ const txSchema = z.object({
 });
 
 export async function createTransaction(formData: FormData): Promise<{ ok: false; error: string } | never> {
-  const userId = await requireUserId();
+  const { ownerId, actorId } = await requireActor();
   const parsed = txSchema.safeParse({
     label: formData.get("label"),
     amount: formData.get("amount"),
@@ -32,12 +32,13 @@ export async function createTransaction(formData: FormData): Promise<{ ok: false
   const cents = Math.round(d.amount * 100) * (d.type === "expense" ? -1 : 1);
 
   await db.insert(transactions).values({
-    userId,
+    userId: ownerId,
     label: d.label,
     amountCents: cents,
     categoryId: d.categoryId || null,
     note: d.note || null,
     occurredAt: d.date,
+    addedByUserId: actorId,
   });
 
   revalidatePath("/dashboard");
@@ -47,7 +48,7 @@ export async function createTransaction(formData: FormData): Promise<{ ok: false
 }
 
 export async function deleteTransaction(id: number) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   await db.delete(transactions).where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
   revalidatePath("/dashboard");
   revalidatePath("/transactions");
@@ -56,7 +57,7 @@ export async function deleteTransaction(id: number) {
 }
 
 export async function updateTransaction(id: number, formData: FormData): Promise<{ ok: false; error: string } | never> {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   const parsed = txSchema.safeParse({
     label: formData.get("label"),
     amount: formData.get("amount"),

@@ -4,7 +4,7 @@ import { db, recurringIncome, transactions } from "@/db";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUserId } from "@/lib/require-user";
+import { requireOwner } from "@/lib/require-user";
 
 const salarySchema = z.object({
   name: z.string().trim().min(1).max(80),
@@ -16,7 +16,7 @@ const salarySchema = z.object({
 });
 
 export async function upsertPrimaryIncome(formData: FormData) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   const parsed = salarySchema.safeParse({
     name: formData.get("name"),
     payer: formData.get("payer") || null,
@@ -63,7 +63,7 @@ const gigSchema = z.object({
 });
 
 export async function logGigIncome(formData: FormData) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   const parsed = gigSchema.safeParse({
     label: formData.get("label"),
     amount: formData.get("amount"),
@@ -87,7 +87,7 @@ export async function logGigIncome(formData: FormData) {
 }
 
 export async function deleteGigIncome(id: number) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   await db.delete(transactions).where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
   revalidatePath("/income");
   revalidatePath("/dashboard");

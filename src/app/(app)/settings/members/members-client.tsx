@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { addHouseholdMember, removeMember } from "@/app/login/actions";
 
-type Member = { id: number; name: string };
+type Member = { id: number; name: string; role: "owner" | "helper" };
 
 export function MembersClient({ currentId, initialMembers }: { currentId: number; initialMembers: Member[] }) {
   const [members, setMembers] = useState<Member[]>(initialMembers);
@@ -19,13 +19,16 @@ export function MembersClient({ currentId, initialMembers }: { currentId: number
       </div>
 
       <button className="btn btn-primary" onClick={() => setAdding(true)}>
-        <Plus size={16} strokeWidth={2.5} /> Add a household member
+        <Plus size={16} strokeWidth={2.5} /> Add a helper
       </button>
+      <div className="faint" style={{ fontSize: 11.5, maxWidth: 520 }}>
+        A helper signs in with their own PIN, can see your whole budget, and can add transactions on your behalf. They can't change bills, budgets, savings, or categories — that's owner-only.
+      </div>
 
       {adding && (
         <AddMemberModal
           onClose={() => setAdding(false)}
-          onAdded={(m) => { setMembers((cur) => [...cur, m]); setAdding(false); }}
+          onAdded={(m) => { setMembers((cur) => [...cur, { ...m, role: "helper" }]); setAdding(false); }}
         />
       )}
     </>
@@ -35,21 +38,26 @@ export function MembersClient({ currentId, initialMembers }: { currentId: number
 function MemberRow({ member, isCurrent, onRemoved }: { member: Member; isCurrent: boolean; onRemoved: () => void }) {
   const [pending, startTransition] = useTransition();
   function handleRemove() {
-    if (!confirm(`Remove "${member.name}"? Their bills, transactions, and savings will also be deleted.`)) return;
+    if (!confirm(`Remove "${member.name}"? They'll no longer be able to sign in.`)) return;
     startTransition(async () => {
       const res = await removeMember(member.id);
       if (res.ok) onRemoved();
       else alert(res.error);
     });
   }
+  const subtitle = isCurrent
+    ? "Account owner · currently signed in"
+    : member.role === "owner"
+    ? "Account owner"
+    : "Helper · can view + add transactions";
   return (
     <div className="lrow" style={{ opacity: pending ? 0.5 : 1 }}>
       <div className="icn">{member.name.slice(0, 2).toUpperCase()}</div>
       <div className="col grow" style={{ minWidth: 0 }}>
         <div className="nm">{member.name}</div>
-        <div className="sub">{isCurrent ? "Currently signed in" : "Signs in with their own PIN"}</div>
+        <div className="sub">{subtitle}</div>
       </div>
-      {!isCurrent && (
+      {!isCurrent && member.role === "helper" && (
         <button className="btn btn-ghost" onClick={handleRemove} disabled={pending} style={{ height: 36, width: 36, padding: 0, color: "var(--text-faint)" }}>
           <Trash2 size={14} />
         </button>
@@ -58,7 +66,7 @@ function MemberRow({ member, isCurrent, onRemoved }: { member: Member; isCurrent
   );
 }
 
-function AddMemberModal({ onClose, onAdded }: { onClose: () => void; onAdded: (m: Member) => void }) {
+function AddMemberModal({ onClose, onAdded }: { onClose: () => void; onAdded: (m: { id: number; name: string }) => void }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");

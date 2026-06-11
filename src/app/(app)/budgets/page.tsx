@@ -1,9 +1,9 @@
-import { requireUserId } from "@/lib/require-user";
+import { requireActor } from "@/lib/require-user";
 import { getCategories, getBudgets, getCategorySpendBreakdown } from "@/lib/queries";
 import { BudgetsClient } from "./budgets-client";
 
 export default async function BudgetsPage() {
-  const userId = await requireUserId();
+  const { ownerId: userId, role } = await requireActor();
   const [cats, bgs, breakdown] = await Promise.all([
     getCategories(userId),
     getBudgets(userId),
@@ -27,5 +27,5 @@ export default async function BudgetsPage() {
     })
     .sort((a, b) => (b.spentCents - a.spentCents) || (b.budgetCents - a.budgetCents));
 
-  return <BudgetsClient categories={rows} />;
+  return <BudgetsClient categories={rows} canEdit={role === "owner"} />;
 }

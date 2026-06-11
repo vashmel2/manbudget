@@ -4,7 +4,7 @@ import { db, categories, budgets } from "@/db";
 import { and, asc, desc, eq, gt, isNull, lt, max, ne, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUserId } from "@/lib/require-user";
+import { requireOwner } from "@/lib/require-user";
 
 const slugify = (s: string) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "cat";
@@ -32,7 +32,7 @@ async function ensureUniqueSlug(userId: number, base: string, excludeId?: number
 }
 
 export async function createCategory(formData: FormData) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   const parsed = schema.safeParse({
     label: formData.get("label"),
     glyph: formData.get("glyph") || "··",
@@ -73,7 +73,7 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function updateCategory(id: number, formData: FormData) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   const parsed = schema.safeParse({
     label: formData.get("label"),
     glyph: formData.get("glyph") || "··",
@@ -118,7 +118,7 @@ export async function updateCategory(id: number, formData: FormData) {
 }
 
 export async function archiveCategory(id: number) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   await db
     .update(categories)
     .set({ archivedAt: new Date() })
@@ -130,7 +130,7 @@ export async function archiveCategory(id: number) {
 }
 
 export async function unarchiveCategory(id: number) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   await db
     .update(categories)
     .set({ archivedAt: null })
@@ -140,7 +140,7 @@ export async function unarchiveCategory(id: number) {
 }
 
 export async function moveCategory(id: number, direction: "up" | "down") {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   const [current] = await db
     .select()
     .from(categories)

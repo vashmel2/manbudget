@@ -7,7 +7,7 @@ import { setBudget, syncBudgetsToBills } from "./actions";
 
 type Row = { id: number; label: string; glyph: string; budgetCents: number; spentCents: number; billsCents: number; txCents: number };
 
-export function BudgetsClient({ categories }: { categories: Row[] }) {
+export function BudgetsClient({ categories, canEdit }: { categories: Row[]; canEdit: boolean }) {
   const totalBudget = categories.reduce((s, c) => s + c.budgetCents, 0);
   const totalSpent = categories.reduce((s, c) => s + c.spentCents, 0);
   const [syncing, startSync] = useTransition();
@@ -36,19 +36,21 @@ export function BudgetsClient({ categories }: { categories: Row[] }) {
             "Spent" includes all bills in the category (committed) plus ad-hoc transactions. Leave cap at 0 if you just want to track without a limit.
           </div>
         </div>
-        <button className="btn btn-ghost" onClick={handleSync} disabled={syncing} style={{ flex: "none" }}>
-          <Zap size={14} /> {syncing ? "Syncing…" : synced !== null ? `Synced ${synced}` : "Sync caps to bills"}
-        </button>
+        {canEdit && (
+          <button className="btn btn-ghost" onClick={handleSync} disabled={syncing} style={{ flex: "none" }}>
+            <Zap size={14} /> {syncing ? "Syncing…" : synced !== null ? `Synced ${synced}` : "Sync caps to bills"}
+          </button>
+        )}
       </div>
 
       <div className="card">
-        {categories.map((c) => <BudgetRow key={c.id} row={c} />)}
+        {categories.map((c) => <BudgetRow key={c.id} row={c} canEdit={canEdit} />)}
       </div>
     </div>
   );
 }
 
-function BudgetRow({ row }: { row: Row }) {
+function BudgetRow({ row, canEdit }: { row: Row; canEdit: boolean }) {
   const [value, setValue] = useState((row.budgetCents / 100).toFixed(0));
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -93,11 +95,12 @@ function BudgetRow({ row }: { row: Row }) {
             type="number"
             value={value}
             onChange={(e) => { setValue(e.target.value); setSaved(false); }}
-            onBlur={save}
+            onBlur={canEdit ? save : undefined}
+            readOnly={!canEdit}
             min="0"
             step="100"
             className="input num"
-            style={{ width: 100, height: 36, textAlign: "right" }}
+            style={{ width: 100, height: 36, textAlign: "right", opacity: canEdit ? 1 : 0.6 }}
             disabled={pending}
           />
         </div>

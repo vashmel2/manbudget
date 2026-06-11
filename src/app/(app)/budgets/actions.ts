@@ -4,7 +4,7 @@ import { db, budgets, bills } from "@/db";
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUserId } from "@/lib/require-user";
+import { requireOwner } from "@/lib/require-user";
 
 const schema = z.object({
   categoryId: z.coerce.number().int().positive(),
@@ -12,7 +12,7 @@ const schema = z.object({
 });
 
 export async function setBudget(formData: FormData) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   const parsed = schema.safeParse({
     categoryId: formData.get("categoryId"),
     amount: formData.get("amount"),
@@ -39,7 +39,7 @@ export async function setBudget(formData: FormData) {
 }
 
 export async function syncBudgetsToBills() {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
 
   const billTotals = await db
     .select({

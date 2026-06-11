@@ -4,7 +4,7 @@ import { db, bills, billPayments } from "@/db";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUserId } from "@/lib/require-user";
+import { requireOwner } from "@/lib/require-user";
 import { currentPeriod, currentQuarter, currentYear, currentHalf } from "@/lib/utils";
 
 const billSchema = z.object({
@@ -17,7 +17,7 @@ const billSchema = z.object({
 });
 
 export async function createBill(formData: FormData) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   const parsed = billSchema.safeParse({
     name: formData.get("name"),
     payee: formData.get("payee") || null,
@@ -46,7 +46,7 @@ export async function createBill(formData: FormData) {
 }
 
 export async function updateBill(id: number, formData: FormData) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   const parsed = billSchema.safeParse({
     name: formData.get("name"),
     payee: formData.get("payee") || null,
@@ -78,7 +78,7 @@ export async function updateBill(id: number, formData: FormData) {
 }
 
 export async function deleteBill(id: number) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   await db
     .update(bills)
     .set({ active: false })
@@ -89,7 +89,7 @@ export async function deleteBill(id: number) {
 }
 
 export async function togglePaid(billId: number, cadence: "monthly" | "quarterly" | "bimonthly" | "yearly" | "semiannual") {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   const [bill] = await db.select().from(bills).where(and(eq(bills.id, billId), eq(bills.userId, userId))).limit(1);
   if (!bill) return { ok: false as const, error: "Bill not found" };
 

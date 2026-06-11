@@ -4,8 +4,8 @@ import { db, users } from "@/db";
 import { hashPin, verifyPin } from "@/lib/auth";
 import { getSession } from "@/lib/session";
 import { seedDefaultsForUser } from "@/lib/seed-defaults";
-import { requireUserId } from "@/lib/require-user";
-import { eq } from "drizzle-orm";
+import { requireUserId, requireOwner } from "@/lib/require-user";
+import { eq, or } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -22,13 +22,15 @@ export async function loginWithPin(pin: string): Promise<LoginResult> {
     const pinHash = hashPin(pin);
     const [created] = await db
       .insert(users)
-      .values({ name: "You", pinHash })
+      .values({ name: "You", pinHash, role: "owner" })
       .returning();
     await seedDefaultsForUser(created.id);
 
     const session = await getSession();
     session.userId = created.id;
+    session.actualUserId = created.id;
     session.userName = created.name;
+    session.role = "owner";
     await session.save();
     return { ok: true };
   }
@@ -37,8 +39,11 @@ export async function loginWithPin(pin: string): Promise<LoginResult> {
   for (const u of existing) {
     if (verifyPin(pin, u.pinHash)) {
       const session = await getSession();
-      session.userId = u.id;
+      const isHelper = u.role === "helper" && u.linkedToUserId != null;
+      session.userId = isHelper ? u.linkedToUserId! : u.id;
+      session.actualUserId = u.id;
       session.userName = u.name;
+      session.role = isHelper ? "helper" : "owner";
       await session.save();
       return { ok: true };
     }
@@ -64,7 +69,7 @@ const memberSchema = z.object({
 });
 
 export async function addHouseholdMember(formData: FormData) {
-  await requireUserId();
+  const ownerId = await requireOwner();
   const parsed = memberSchema.safeParse({
     name: formData.get("name"),
     pin: formData.get("pin"),
@@ -73,7 +78,6 @@ export async function addHouseholdMember(formData: FormData) {
 
   const { name, pin } = parsed.data;
 
-  // Make sure no existing user has this PIN — otherwise login becomes ambiguous
   const all = await db.select().from(users);
   for (const u of all) {
     if (verifyPin(pin, u.pinHash)) {
@@ -83,21 +87,24 @@ export async function addHouseholdMember(formData: FormData) {
 
   const [created] = await db
     .insert(users)
-    .values({ name, pinHash: hashPin(pin) })
+    .values({ name, pinHash: hashPin(pin), role: "helper", linkedToUserId: ownerId })
     .returning();
-  await seedDefaultsForUser(created.id);
 
   return { ok: true as const, userId: created.id };
 }
 
 export async function listMembers() {
-  await requireUserId();
-  return db.select({ id: users.id, name: users.name }).from(users).orderBy(users.id);
+  const ownerId = await requireUserId();
+  return db
+    .select({ id: users.id, name: users.name, role: users.role, linkedToUserId: users.linkedToUserId })
+    .from(users)
+    .where(or(eq(users.id, ownerId), eq(users.linkedToUserId, ownerId)))
+    .orderBy(users.id);
 }
 
 export async function removeMember(id: number) {
-  const current = await requireUserId();
-  if (current === id) return { ok: false as const, error: "Can't remove yourself while signed in." };
+  const ownerId = await requireOwner();
+  if (ownerId === id) return { ok: false as const, error: "Can't remove the account owner." };
   await db.delete(users).where(eq(users.id, id));
   return { ok: true as const };
 }

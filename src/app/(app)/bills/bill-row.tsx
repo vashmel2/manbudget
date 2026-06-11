@@ -56,13 +56,13 @@ export function BillRow({ bill, onEdit }: Props) {
           <span style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--cyan)" }} aria-label="Auto-deducted">
             <Zap size={14} fill="currentColor" strokeWidth={0} />
           </span>
-        ) : (
+        ) : onEdit ? (
           <button className="chk" data-on={bill.paid} onClick={toggle} disabled={pending} aria-label={bill.paid ? "Mark unpaid" : "Mark paid"}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </button>
-        )}
+        ) : null}
       </div>
 
       <ConfirmDialog

@@ -1,11 +1,13 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { requireUserId } from "@/lib/require-user";
+import { requireActor } from "@/lib/require-user";
 import { listMembers } from "@/app/login/actions";
 import { MembersClient } from "./members-client";
 
 export default async function MembersPage() {
-  const currentId = await requireUserId();
+  const { ownerId, role } = await requireActor();
+  if (role !== "owner") redirect("/settings");
   const members = await listMembers();
   return (
     <div className="col fade-up" style={{ gap: "var(--pad-lg)" }}>
@@ -20,7 +22,7 @@ export default async function MembersPage() {
           Each member has their own PIN and their own private data — bills, transactions, budgets, savings.
         </div>
       </div>
-      <MembersClient currentId={currentId} initialMembers={members} />
+      <MembersClient currentId={ownerId} initialMembers={members.map((m) => ({ id: m.id, name: m.name, role: m.role as "owner" | "helper" }))} />
     </div>
   );
 }

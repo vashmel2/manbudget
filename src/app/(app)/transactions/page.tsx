@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { requireUserId } from "@/lib/require-user";
+import { requireActor } from "@/lib/require-user";
 import { getRecentTransactions } from "@/lib/queries";
 import { peso } from "@/lib/peso";
 import { TxRow } from "./tx-row";
 
 export default async function TransactionsPage() {
-  const userId = await requireUserId();
-  const txs = await getRecentTransactions(userId, 100);
+  const { ownerId, role } = await requireActor();
+  const txs = await getRecentTransactions(ownerId, 100);
 
   const totalIn = txs.filter((t) => t.amountCents > 0).reduce((s, t) => s + t.amountCents, 0);
   const totalOut = txs.filter((t) => t.amountCents < 0).reduce((s, t) => s + Math.abs(t.amountCents), 0);
@@ -35,7 +35,7 @@ export default async function TransactionsPage() {
         </div>
       ) : (
         <div className="card">
-          {txs.map((t) => <TxRow key={t.id} tx={t} />)}
+          {txs.map((t) => <TxRow key={t.id} tx={t} role={role} ownerId={ownerId} />)}
         </div>
       )}
     </div>

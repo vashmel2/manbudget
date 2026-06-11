@@ -4,7 +4,7 @@ import { db, savingsGoals, savingsContributions } from "@/db";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUserId } from "@/lib/require-user";
+import { requireOwner } from "@/lib/require-user";
 
 const goalSchema = z.object({
   name: z.string().trim().min(1).max(80),
@@ -13,7 +13,7 @@ const goalSchema = z.object({
 });
 
 export async function upsertGoal(formData: FormData) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   const parsed = goalSchema.safeParse({
     name: formData.get("name"),
     target: formData.get("target"),
@@ -54,7 +54,7 @@ const contribSchema = z.object({
 });
 
 export async function addContribution(formData: FormData) {
-  await requireUserId();
+  await requireOwner();
   const parsed = contribSchema.safeParse({
     goalId: formData.get("goalId"),
     amount: formData.get("amount"),
@@ -76,7 +76,7 @@ export async function addContribution(formData: FormData) {
 }
 
 export async function deleteContribution(id: number) {
-  await requireUserId();
+  await requireOwner();
   await db.delete(savingsContributions).where(eq(savingsContributions.id, id));
   revalidatePath("/savings");
   revalidatePath("/dashboard");

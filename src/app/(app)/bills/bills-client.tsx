@@ -12,9 +12,10 @@ type Category = { id: number; label: string; slug: string; glyph: string };
 interface Props {
   bills: BillWithStatus[];
   categories: Category[];
+  canEdit: boolean;
 }
 
-export function BillsClient({ bills, categories }: Props) {
+export function BillsClient({ bills, categories, canEdit }: Props) {
   const [editing, setEditing] = useState<BillWithStatus | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -36,9 +37,11 @@ export function BillsClient({ bills, categories }: Props) {
             {paidCount} of {bills.length} paid · {peso(remainingCents)} remaining
           </div>
         </div>
-        <button className="btn btn-primary" onClick={() => setCreating(true)}>
-          <Plus size={16} strokeWidth={2.5} /> New bill
-        </button>
+        {canEdit && (
+          <button className="btn btn-primary" onClick={() => setCreating(true)}>
+            <Plus size={16} strokeWidth={2.5} /> New bill
+          </button>
+        )}
       </div>
 
       {bills.length > 0 && (
@@ -71,7 +74,7 @@ export function BillsClient({ bills, categories }: Props) {
             <div className="col" style={{ gap: 8 }}>
               <div className="section-title"><h3>Monthly</h3><span className="meta">{monthly.length} bills</span></div>
               <div className="card">
-                {monthly.map((b) => <BillRow key={b.id} bill={b} onEdit={() => setEditing(b)} />)}
+                {monthly.map((b) => <BillRow key={b.id} bill={b} onEdit={canEdit ? () => setEditing(b) : undefined} />)}
               </div>
             </div>
           )}
@@ -80,7 +83,7 @@ export function BillsClient({ bills, categories }: Props) {
             <div className="col" style={{ gap: 8 }}>
               <div className="section-title"><h3>Quarterly</h3><span className="meta">{quarterly.length} bills</span></div>
               <div className="card">
-                {quarterly.map((b) => <BillRow key={b.id} bill={b} onEdit={() => setEditing(b)} />)}
+                {quarterly.map((b) => <BillRow key={b.id} bill={b} onEdit={canEdit ? () => setEditing(b) : undefined} />)}
               </div>
             </div>
           )}
@@ -89,7 +92,7 @@ export function BillsClient({ bills, categories }: Props) {
             <div className="col" style={{ gap: 8 }}>
               <div className="section-title"><h3>Semiannual</h3><span className="meta">{semiannual.length} bills</span></div>
               <div className="card">
-                {semiannual.map((b) => <BillRow key={b.id} bill={b} onEdit={() => setEditing(b)} />)}
+                {semiannual.map((b) => <BillRow key={b.id} bill={b} onEdit={canEdit ? () => setEditing(b) : undefined} />)}
               </div>
             </div>
           )}
@@ -98,14 +101,16 @@ export function BillsClient({ bills, categories }: Props) {
             <div className="col" style={{ gap: 8 }}>
               <div className="section-title"><h3>Yearly</h3><span className="meta">{yearly.length} bills</span></div>
               <div className="card">
-                {yearly.map((b) => <BillRow key={b.id} bill={b} onEdit={() => setEditing(b)} />)}
+                {yearly.map((b) => <BillRow key={b.id} bill={b} onEdit={canEdit ? () => setEditing(b) : undefined} />)}
               </div>
             </div>
           )}
         </>
       )}
 
-      <BillForm open={creating || !!editing} onClose={() => { setCreating(false); setEditing(null); }} categories={categories} editing={editing} />
+      {canEdit && (
+        <BillForm open={creating || !!editing} onClose={() => { setCreating(false); setEditing(null); }} categories={categories} editing={editing} />
+      )}
     </div>
   );
 }

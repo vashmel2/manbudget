@@ -1,4 +1,4 @@
-import { db, bills, billPayments, categories, transactions, recurringIncome, budgets, savingsGoals, savingsContributions } from "@/db";
+import { db, bills, billPayments, categories, transactions, recurringIncome, budgets, savingsGoals, savingsContributions, users } from "@/db";
 import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { currentPeriod, currentQuarter, currentYear, currentHalf } from "./utils";
 
@@ -94,9 +94,12 @@ export async function getRecentTransactions(userId: number, limit = 20) {
       categorySlug: categories.slug,
       categoryLabel: categories.label,
       categoryGlyph: categories.glyph,
+      addedByUserId: transactions.addedByUserId,
+      addedByName: users.name,
     })
     .from(transactions)
     .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .leftJoin(users, eq(transactions.addedByUserId, users.id))
     .where(eq(transactions.userId, userId))
     .orderBy(desc(transactions.occurredAt), desc(transactions.id))
     .limit(limit);
