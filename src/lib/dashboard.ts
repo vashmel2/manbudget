@@ -43,12 +43,28 @@ export async function getDashboardData(userId: number, ref: Date = new Date()) {
     }
     return todayDay >= (i.firstDay ?? 1) ? i.amountCents : 0;
   };
+  const nextPaydayFor = (i: typeof incomes[number]): number | null => {
+    const fd = i.firstDay ?? 1;
+    if (i.cadence === "bimonthly") {
+      const sd = i.secondDay ?? 30;
+      if (todayDay < fd) return fd;
+      if (todayDay < sd) return sd;
+      return null;
+    }
+    return todayDay < fd ? fd : null;
+  };
 
   const primaryIncomeExpected = incomes.reduce((s, i) => s + i.amountCents, 0);
   const primaryIncomeReceived = incomes.reduce((s, i) => s + incomeReceivedFrom(i), 0);
+  const upcomingPaydays = incomes
+    .map(nextPaydayFor)
+    .filter((d): d is number => d !== null)
+    .sort((a, b) => a - b);
+  const nextPayday = upcomingPaydays[0] ?? null;
   const gigIncomeMTD = spend.reduce((s, r) => s + r.incomeTotal, 0);
   const incomeMTD = primaryIncomeExpected + gigIncomeMTD;
   const incomeReceived = primaryIncomeReceived + gigIncomeMTD;
+  const hasPrimaryIncome = incomes.length > 0;
 
   const monthlyEquiv = (b: typeof bills[number]) =>
     b.cadence === "yearly" ? Math.round(b.amountCents / 12) :
@@ -111,6 +127,8 @@ export async function getDashboardData(userId: number, ref: Date = new Date()) {
     daysInMonth,
     incomeMTD,
     incomeReceived,
+    nextPayday,
+    hasPrimaryIncome,
     primaryIncome: primaryIncomeExpected,
     gigIncomeMTD,
     billsTotal,

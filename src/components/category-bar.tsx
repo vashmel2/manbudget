@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { peso } from "@/lib/peso";
 
 interface Props {
@@ -6,16 +7,17 @@ interface Props {
   spentCents: number;
   capCents: number;
   billsCents?: number;
+  href?: string;
 }
 
-export function CategoryBar({ label, glyph, spentCents, capCents, billsCents }: Props) {
+export function CategoryBar({ label, glyph, spentCents, capCents, billsCents, href }: Props) {
   const pct = capCents > 0 ? spentCents / capCents : 0;
   const over = capCents > 0 && spentCents > capCents;
   const noCapWithSpend = capCents === 0 && spentCents > 0;
   const color = over ? "var(--warn)" : pct > 0.85 ? "var(--cyan)" : "var(--pos)";
   const fillWidth = capCents > 0 ? Math.min(pct, 1.3) * (100 / 1.3) : noCapWithSpend ? 100 : 0;
 
-  return (
+  const inner = (
     <div className="catbar">
       <div className="head">
         <span className="nm">
@@ -37,4 +39,13 @@ export function CategoryBar({ label, glyph, spentCents, capCents, billsCents }: 
       )}
     </div>
   );
+
+  if (href) {
+    return (
+      <Link href={href} style={{ display: "block", textDecoration: "none", color: "inherit", cursor: "pointer" }}>
+        {inner}
+      </Link>
+    );
+  }
+  return inner;
 }

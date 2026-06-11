@@ -39,7 +39,7 @@ export default async function DashboardPage() {
         <Stat
           label="Income this month"
           value={pesoK(m.incomeMTD)}
-          sub={m.incomeReceived > 0 ? pesoK(m.incomeReceived) + " in the bank" : "nothing received yet"}
+          sub={incomeSub(m)}
           tone="pos"
         />
         <Stat
@@ -130,7 +130,7 @@ export default async function DashboardPage() {
               .sort((a, b) => (b.spentCents - a.spentCents) || (b.capCents - a.capCents))
               .slice(0, 6)
               .map((c) => (
-                <CategoryBar key={c.categoryId} label={c.label} glyph={c.glyph} spentCents={c.spentCents} capCents={c.capCents} billsCents={c.billsCents} />
+                <CategoryBar key={c.categoryId} label={c.label} glyph={c.glyph} spentCents={c.spentCents} capCents={c.capCents} billsCents={c.billsCents} href={`/budgets/${c.categoryId}`} />
               ))}
           </div>
           <Link href="/budgets" className="btn btn-ghost btn-block" style={{ marginTop: 8 }}>Manage budgets</Link>
@@ -179,6 +179,15 @@ function Stat({ label, value, sub, tone }: { label: string; value: string; sub: 
       <span className="sub">{sub}</span>
     </div>
   );
+}
+
+function incomeSub(m: Awaited<ReturnType<typeof import("@/lib/dashboard").getDashboardData>>): string {
+  if (!m.hasPrimaryIncome && m.gigIncomeMTD === 0) return "set up income to track";
+  if (!m.hasPrimaryIncome) return pesoK(m.gigIncomeMTD) + " from gigs";
+  if (m.incomeReceived >= m.primaryIncome) return "fully received";
+  if (m.incomeReceived > 0 && m.nextPayday) return pesoK(m.incomeReceived) + " in · next payday day " + m.nextPayday;
+  if (m.nextPayday) return "next payday day " + m.nextPayday;
+  return "all paydays passed";
 }
 
 function LegendRow({ color, label, value }: { color: string; label: string; value: string }) {
