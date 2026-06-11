@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Tags, ChevronRight, Download } from "lucide-react";
+import { Tags, ChevronRight, Download, Users } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { logout } from "@/app/login/actions";
 
@@ -18,6 +18,14 @@ export default async function SettingsPage() {
           <div className="col grow" style={{ minWidth: 0 }}>
             <div className="nm">Categories</div>
             <div className="sub">Add, rename, reorder, archive</div>
+          </div>
+          <ChevronRight size={16} style={{ color: "var(--text-faint)" }} />
+        </Link>
+        <Link href="/settings/members" className="lrow" style={{ cursor: "pointer", textDecoration: "none", color: "inherit" }}>
+          <div className="icn"><Users size={16} /></div>
+          <div className="col grow" style={{ minWidth: 0 }}>
+            <div className="nm">Household members</div>
+            <div className="sub">Add your wife or others — each has their own PIN and data</div>
           </div>
           <ChevronRight size={16} style={{ color: "var(--text-faint)" }} />
         </Link>

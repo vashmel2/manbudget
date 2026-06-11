@@ -303,14 +303,24 @@
 .input{
   width:100%; height:46px; padding:0 14px; border-radius:11px;
   background:var(--surface-2); border:1px solid var(--hairline);
-  color:var(--text); font-family:var(--ui); font-size:14px; outline:none;
+  color:var(--text); font-family:var(--ui); font-size:16px; outline:none;
   transition:border-color .14s;
+  min-width:0; max-width:100%;
 }
 .input:focus{ border-color:var(--cyan); }
 .input.num{ font-family:var(--mono); }
 
 textarea.input{ height:auto; padding:12px 14px; resize:vertical; min-height:46px; }
 select.input{ appearance:none; padding-right:32px; background-image:linear-gradient(45deg, transparent 50%, var(--text-dim) 50%), linear-gradient(135deg, var(--text-dim) 50%, transparent 50%); background-position:calc(100% - 16px) center, calc(100% - 11px) center; background-size:5px 5px; background-repeat:no-repeat; }
+
+/* iOS date / datetime inputs — stop them overflowing their container */
+input[type="date"], input[type="datetime-local"], input[type="time"]{
+  -webkit-appearance:none; appearance:none;
+  min-width:0; max-width:100%; width:100%;
+  display:block; box-sizing:border-box;
+}
+input[type="date"]::-webkit-date-and-time-value{ text-align:left; }
+input[type="number"]{ min-width:0; max-width:100%; }
 
 /* ---------- shell ---------- */
 .app-shell{ display:flex; min-height:100dvh; }
@@ -336,3 +346,62 @@ select.input{ appearance:none; padding-right:32px; background-image:linear-gradi
 .fade-up{ animation:fadeUp .4s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes fadeUp{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
 @media (prefers-reduced-motion:reduce){ .fade-up{ animation:none; } }
+
+/* ---------- prevent horizontal scroll ---------- */
+html, body{ overflow-x:hidden; max-width:100%; }
+
+/* ============================================================
+   Mobile font scaling — bump nearly every text size on small screens
+   ============================================================ */
+@media (max-width: 640px) {
+  .mb { font-size: 16px; }
+
+  .mb .eyebrow { font-size: 12.5px; letter-spacing: 0.12em; }
+  .mb .muted { font-size: 14px; }
+  .mb .faint { font-size: 12.5px; }
+
+  .mb .section-title h3 { font-size: 15.5px; }
+  .mb .section-title .meta { font-size: 12.5px; }
+
+  .mb .stat { padding: var(--pad-lg); }
+  .mb .stat .label-txt { font-size: 13.5px; }
+  .mb .stat .value { font-size: 26px; }
+  .mb .stat .sub { font-size: 13px; }
+
+  .mb .lrow { min-height: 64px; padding: 0 var(--pad); }
+  .mb .lrow .icn { width: 40px; height: 40px; font-size: 15px; border-radius: 10px; }
+  .mb .lrow .nm { font-size: 16px; }
+  .mb .lrow .sub { font-size: 13px; }
+  .mb .lrow .amt { font-size: 17px; }
+
+  .mb .chk { width: 30px; height: 30px; border-radius: 9px; }
+  .mb .chk svg { width: 17px; height: 17px; }
+
+  .mb .chip { height: 44px; padding: 0 16px; font-size: 14.5px; }
+
+  .mb .catbar .head .nm { font-size: 14.5px; }
+  .mb .catbar .head .fig { font-size: 13px; }
+
+  .mb .btn { height: 52px; font-size: 16px; padding: 0 20px; }
+  .mb .btn-lg { height: 60px; font-size: 17px; }
+  .mb .input { height: 52px; font-size: 16px; padding: 0 16px; }
+  .mb textarea.input { padding: 14px 16px; min-height: 52px; }
+
+  .mb .tag { height: 23px; font-size: 11px; padding: 0 9px; }
+
+  .mb .bnav .item { font-size: 11px; padding: 11px 0 9px; }
+  .mb .bnav .item svg { width: 24px; height: 24px; }
+
+  .mb .snav .item { height: 46px; font-size: 14.5px; }
+
+  .mb .numpad button { height: 68px; font-size: 26px; }
+  .mb .pindots .pd { width: 16px; height: 16px; }
+
+  .mb .seg button { font-size: 14px; padding: 9px 16px; }
+
+  .mb h2 { font-size: 24px !important; }
+  .mb h3 { font-size: 16px; }
+
+  /* dashboard hero — bump money numbers */
+  .mb .num { letter-spacing: -0.015em; }
+}
